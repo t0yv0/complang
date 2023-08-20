@@ -73,7 +73,7 @@ func tokenize(s string) ([]token, error) {
 				tok.length = i - tok.offset
 				tokens = append(tokens, tok)
 			} else {
-				return nil, fmt.Errorf("unexpected %v", s[i])
+				return nil, fmt.Errorf("unexpected '%v'", string(s[i]))
 			}
 		}
 	}

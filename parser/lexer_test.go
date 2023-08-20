@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -62,6 +63,11 @@ func TestTokenize(t *testing.T) {
 				"foo",
 				byte(')'),
 			},
+		},
+		{
+			s:      "123",
+			tokens: []any{123},
+			err:    fmt.Errorf("unexpected '1'"),
 		},
 	}
 
