@@ -78,7 +78,7 @@ simpleValue
 
 Custom values can be implemented in Go to overide key interactions with the interpreter:
 
-```
+```go
 type CustomValue interface {
 	Message(arg Value) Value
 	CompleteSymbol(query Symbol) []Symbol
