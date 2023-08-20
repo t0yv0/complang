@@ -26,7 +26,7 @@ type complangInterpreter struct {
 func (ci *complangInterpreter) ReadEvalPrint(command string) {
 	stmt, err := parser.ParseStmt(command)
 	if err != nil {
-		fmt.Printf("ERROR invalid syntax: %v", err)
+		fmt.Printf("ERROR invalid syntax: %v\n", err)
 		return
 	}
 	expr.EvalStmt(ci.env, stmt)

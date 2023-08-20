@@ -1,7 +1,5 @@
 - parse numbers
 
-- why is number entry "1234" ignored currently?
-
 - populate $std library
 
 - does completion still work in assignment expressions? no it does not
