@@ -1,13 +1,23 @@
 # complang
 
-A programming language designed for:
+A toy scripting language designed for:
 
 - interactive shell-like use
 - context-aware code completion
 - being extensible in Go
 
-Typical usecase is to write a Go library, bind it to complang and compile an extended complang interpreter into a
-standalone executable that makes it easy to interactively use the library.
+## Example
+
+See [complang-bare](./cmd/complang-bare/main.go) for an example Go-extended complang REPL.
+
+```
+go build ./cmd/complang-bare/
+./complang-bare
+» $digits t<TAB>
+three two
+» $digits three<ENTER>
+"3"
+```
 
 ## Semantics
 
