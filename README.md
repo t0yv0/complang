@@ -13,9 +13,18 @@ See [complang-bare](./cmd/complang-bare/main.go) for an example Go-extended comp
 ```
 go build ./cmd/complang-bare/
 ./complang-bare
+
+» $digits
+{one: "1", three: "3", two: "2"}
+
 » $digits t<TAB>
 three two
-» $digits three<ENTER>
+
+» $digits three
+"3"
+
+» $x = three
+» $digits $x
 "3"
 ```
 
