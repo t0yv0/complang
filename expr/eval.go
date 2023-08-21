@@ -51,6 +51,9 @@ func EvalQuery(env map[value.Symbol]value.Value, q Query) []value.Symbol {
 	case *SymbolQuery:
 		v := EvalExpr(env, q.Expr)
 		return v.CompleteSymbol(q.Symbol)
+	case *RefQuery:
+		v := &value.MapValue{Value: env}
+		return v.CompleteSymbol(q.Ref)
 	default:
 		panic(fmt.Sprintf("EvalQuery is incomplete, got %#T", q))
 	}

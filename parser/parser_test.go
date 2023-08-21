@@ -10,8 +10,39 @@ import (
 func TestParseStmt(t *testing.T) {
 	s, err := ParseStmt(`$x = "$foo"`)
 	assert.NoError(t, err)
-	t.Logf("#%T", s)
-	s, ok := s.(*expr.AssignStmt)
+	stmt, ok := s.(*expr.AssignStmt)
 	assert.True(t, ok)
-	t.Logf("%v", s)
+	assert.Equal(t, "$x", stmt.Ref.String())
+	str, ok := stmt.Expr.(*expr.StringExpr)
+	assert.True(t, ok)
+	assert.Equal(t, "$foo", str.String)
+}
+
+func TestParseQuery(t *testing.T) {
+	t.Run("SymbolQuery", func(t *testing.T) {
+		q, err := ParseQuery("$obj f")
+		assert.NoError(t, err)
+		sq, ok := q.(*expr.SymbolQuery)
+		assert.True(t, ok)
+		re, ok := sq.Expr.(*expr.RefExpr)
+		assert.True(t, ok)
+		assert.Equal(t, "$obj", re.Ref.String())
+		assert.Equal(t, "f", sq.Symbol.String())
+	})
+	t.Run("RefQuery", func(t *testing.T) {
+		{
+			q, err := ParseQuery("$f")
+			assert.NoError(t, err)
+			rq, ok := q.(*expr.RefQuery)
+			assert.True(t, ok)
+			assert.Equal(t, "$f", rq.Ref.String())
+		}
+		{
+			q, err := ParseQuery("$obj $f")
+			assert.NoError(t, err)
+			rq, ok := q.(*expr.RefQuery)
+			assert.True(t, ok)
+			assert.Equal(t, "$f", rq.Ref.String())
+		}
+	})
 }

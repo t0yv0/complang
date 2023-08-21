@@ -13,10 +13,19 @@ func TestReadEvalComplete(t *testing.T) {
 			value.NewSymbol("fox"):  &value.StringValue{Value: "FOX"},
 			value.NewSymbol("fine"): &value.StringValue{Value: "FINE"},
 		}},
+		value.NewSymbol("$fun"): &value.BoolValue{Value: true},
 	}}
 
-	prefix, completions := inter.ReadEvalComplete("$obj f")
-	assert.Equal(t, "$obj ", prefix)
-	assert.Contains(t, completions, "fox")
-	assert.Contains(t, completions, "fine")
+	{
+		prefix, completions := inter.ReadEvalComplete("$obj f")
+		assert.Equal(t, "$obj ", prefix)
+		assert.Contains(t, completions, "fox")
+		assert.Contains(t, completions, "fine")
+	}
+
+	{
+		_, completions := inter.ReadEvalComplete("$obj $f")
+		//assert.Equal(t, "$obj ", prefix)
+		assert.Contains(t, completions, "$fun")
+	}
 }

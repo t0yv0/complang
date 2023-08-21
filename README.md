@@ -114,7 +114,7 @@ literal
 
 query
     expr symbol
-    expr ref
+    ref
 
 stmt
     expr

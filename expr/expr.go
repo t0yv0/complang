@@ -11,6 +11,8 @@ type Expr interface {
 type RefExpr struct {
 	exprMarkerImpl
 	Ref value.Symbol
+	// Character-based offset of the start of the symbol appearance in the source code.
+	Offset int
 }
 
 var _ Expr = (*RefExpr)(nil)
@@ -92,11 +94,23 @@ type SymbolQuery struct {
 	SymbolOffset int
 }
 
+var _ Query = (*SymbolQuery)(nil)
+
 func (sq *SymbolQuery) Offset() int {
 	return sq.SymbolOffset
 }
 
-var _ Query = (*SymbolQuery)(nil)
+type RefQuery struct {
+	queryMarkerImpl
+	Ref       value.Symbol
+	RefOffset int
+}
+
+var _ Query = (*RefQuery)(nil)
+
+func (rq *RefQuery) Offset() int {
+	return rq.RefOffset
+}
 
 type queryMarkerImpl struct{}
 

@@ -74,7 +74,10 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 	switch t := tokens[0].t.(type) {
 	case value.Symbol:
 		if isRef(t) {
-			return &expr.RefExpr{Ref: t}, tokens[1:]
+			return &expr.RefExpr{
+				Ref:    t,
+				Offset: tokens[0].offset,
+			}, tokens[1:]
 		}
 		return &expr.SymbolExpr{
 			Symbol: t,
@@ -120,6 +123,27 @@ func parseStmt(tokens []token) (expr.Stmt, []token) {
 }
 
 func parseQuery(tokens []token) (expr.Query, []token) {
+	if e, rest := parseSymbolQuery(tokens); e != nil {
+		return e, rest
+	}
+	return parseRefQuery(tokens)
+}
+
+func parseRefQuery(tokens []token) (expr.Query, []token) {
+	if len(tokens) > 0 {
+		lastToken := tokens[len(tokens)-1]
+		e, rest := parseExpr([]token{lastToken})
+		if re, ok := e.(*expr.RefExpr); ok && len(rest) == 0 {
+			return &expr.RefQuery{
+				Ref:       re.Ref,
+				RefOffset: re.Offset,
+			}, nil
+		}
+	}
+	return nil, tokens
+}
+
+func parseSymbolQuery(tokens []token) (expr.Query, []token) {
 	e, rest := parseExpr(tokens)
 	if e == nil {
 		return nil, tokens
