@@ -144,9 +144,15 @@ func parseRefQuery(tokens []token) (expr.Query, []token) {
 }
 
 func parseSymbolQuery(tokens []token) (expr.Query, []token) {
-	e, rest := parseExpr(tokens)
-	if e == nil {
+	stmt, rest := parseStmt(tokens)
+	var e expr.Expr
+	switch stmt := stmt.(type) {
+	case nil:
 		return nil, tokens
+	case *expr.ExprStmt:
+		e = stmt.Expr
+	case *expr.AssignStmt:
+		e = stmt.Expr
 	}
 	switch e := e.(type) {
 	case *expr.MessageExpr:

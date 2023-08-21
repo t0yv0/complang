@@ -20,14 +20,16 @@ func TestParseStmt(t *testing.T) {
 
 func TestParseQuery(t *testing.T) {
 	t.Run("SymbolQuery", func(t *testing.T) {
-		q, err := ParseQuery("$obj f")
-		assert.NoError(t, err)
-		sq, ok := q.(*expr.SymbolQuery)
-		assert.True(t, ok)
-		re, ok := sq.Expr.(*expr.RefExpr)
-		assert.True(t, ok)
-		assert.Equal(t, "$obj", re.Ref.String())
-		assert.Equal(t, "f", sq.Symbol.String())
+		for _, code := range []string{"$obj f", "$v = $obj f"} {
+			q, err := ParseQuery(code)
+			assert.NoError(t, err)
+			sq, ok := q.(*expr.SymbolQuery)
+			assert.True(t, ok)
+			re, ok := sq.Expr.(*expr.RefExpr)
+			assert.True(t, ok)
+			assert.Equal(t, "$obj", re.Ref.String())
+			assert.Equal(t, "f", sq.Symbol.String())
+		}
 	})
 	t.Run("RefQuery", func(t *testing.T) {
 		{
