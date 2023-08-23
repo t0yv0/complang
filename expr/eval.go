@@ -26,10 +26,54 @@ func EvalExpr(env map[value.Symbol]value.Value, expr Expr) value.Value {
 		receiver := EvalExpr(env, expr.Receiver)
 		message := EvalExpr(env, expr.Message)
 		return receiver.Message(message)
+	case *LambdaBlockExpr:
+		return &value.CustomValue{ValueLike: &Closure{
+			params: expr.Symbols,
+			body:   expr.Body,
+			env:    env,
+		}}
 	default:
 		panic("EvalExpr is incomplete")
 	}
 }
+
+type Closure struct {
+	env    map[value.Symbol]value.Value
+	params []value.Symbol
+	body   Expr
+}
+
+var (
+	call = value.NewSymbol("call")
+)
+
+func (c *Closure) Message(arg value.Value) value.Value {
+	if len(c.params) == 0 {
+		if v, ok := arg.(*value.SymbolValue); ok && v.Value == call {
+			return EvalExpr(c.env, c.body)
+		}
+		return &value.ErrorValue{ErrorMessage: "expecting call message"}
+	}
+	env := map[value.Symbol]value.Value{}
+	for k, v := range c.env {
+		env[k] = v
+	}
+	env[c.params[0]] = arg
+	if len(c.params) == 1 {
+		return EvalExpr(env, c.body)
+	}
+	return &value.CustomValue{ValueLike: &Closure{
+		env:    env,
+		params: c.params[1:],
+		body:   c.body,
+	}}
+}
+
+func (c *Closure) CompleteSymbol(query value.Symbol) []value.Symbol { return nil }
+func (c *Closure) Run() value.Value                                 { return &value.CustomValue{ValueLike: c} }
+func (c *Closure) Show() string                                     { return "<closure>" }
+
+var _ value.ValueLike = (*Closure)(nil)
 
 func EvalStmt(env map[value.Symbol]value.Value, stmt Stmt) {
 	switch stmt := stmt.(type) {

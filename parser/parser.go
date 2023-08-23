@@ -71,6 +71,9 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 		}
 		return e, rest
 	}
+	if tokens[0].t == byte('[') {
+		return parseLambdaBlockExpr(tokens)
+	}
 	switch t := tokens[0].t.(type) {
 	case value.Symbol:
 		if isRef(t) {
@@ -92,6 +95,54 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 	default:
 		return nil, tokens
 	}
+}
+
+func parseLambdaBlockExpr(tokens []token) (expr.Expr, []token) {
+	tokens = tokens[1:] // skip [
+
+	k := -1
+	n := 0
+	for n = 0; n < len(tokens); n++ {
+		if tokens[n].t == byte('|') {
+			k = n
+		}
+		if tokens[n].t == byte(']') {
+			break
+		}
+	}
+	if n == len(tokens) {
+		return nil, tokens
+	}
+
+	if k != -1 {
+		body, rest := parseExpr(tokens[k+1 : n])
+		if len(rest) != 0 {
+			return nil, tokens
+		}
+
+		var symbols []value.Symbol
+		for _, t := range tokens[0:k] {
+			s, ok := t.t.(value.Symbol)
+			if !ok {
+				return nil, tokens
+			}
+			symbols = append(symbols, s)
+		}
+
+		return &expr.LambdaBlockExpr{
+			Symbols: symbols,
+			Body:    body,
+		}, tokens[n+1:]
+	}
+
+	body, rest := parseExpr(tokens[0:n])
+	if len(rest) != 0 {
+		return nil, tokens
+	}
+
+	return &expr.LambdaBlockExpr{
+		Body: body,
+	}, tokens[n+1:]
 }
 
 func isRef(s value.Symbol) bool {

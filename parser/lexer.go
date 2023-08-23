@@ -18,7 +18,7 @@ func tokenize(s string) ([]token, error) {
 		switch s[i] {
 		case ' ', '\t', '\r', '\n':
 			i++
-		case '(', ')', '=':
+		case '(', ')', '=', '[', ']', '|':
 			tokens = append(tokens, token{
 				t:      s[i],
 				offset: i,

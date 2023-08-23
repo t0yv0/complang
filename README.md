@@ -26,6 +26,18 @@ three two
 » $x = three
 » $digits $x
 "3"
+
+» [$digits]
+<closure>
+
+» [$digits] call
+{one: "1", three: "3", two: "2"}
+
+» [$digits] call three
+"3"
+
+» [$x $y | $y $x] three $digits
+"3"
 ```
 
 ## Semantics
@@ -76,6 +88,7 @@ value
     map[symbol,value]
     []value
     customValue
+    closure
 
 simpleValue
     null
@@ -113,6 +126,11 @@ simpleExpr
     literal
     ref
     '(' expr ')'
+    lambdaBlockExpr
+
+lambdaBlockExpr
+    [ expr* ]
+    [ symbol* | expr* ]
 
 literal
     null
@@ -145,6 +163,9 @@ token
     '('
     ')'
     '='
+    '['
+    ']'
+    '|'
 
 symbol
     [_a-zA-Z][-_a-zA-Z0-9]*

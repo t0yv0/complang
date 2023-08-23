@@ -54,6 +54,14 @@ type StringExpr struct {
 
 var _ Expr = (*StringExpr)(nil)
 
+type LambdaBlockExpr struct {
+	exprMarkerImpl
+	Symbols []value.Symbol
+	Body    Expr
+}
+
+var _ Expr = (*LambdaBlockExpr)(nil)
+
 type exprMarkerImpl struct{}
 
 func (*exprMarkerImpl) exprMarker() {}

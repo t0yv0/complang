@@ -7,6 +7,30 @@ import (
 	"github.com/t0yv0/complang/expr"
 )
 
+func TestParseLambdaBlockExpr(t *testing.T) {
+	e, err := ParseExpr("[$x | $x call]")
+	assert.NoError(t, err)
+	b, ok := e.(*expr.LambdaBlockExpr)
+	assert.True(t, ok)
+	assert.Equal(t, 1, len(b.Symbols))
+	assert.Equal(t, "$x", b.Symbols[0].String())
+	assert.Equal(t, "$x", b.Body.(*expr.MessageExpr).Receiver.(*expr.RefExpr).Ref.String())
+	assert.Equal(t, "call", b.Body.(*expr.MessageExpr).Message.(*expr.SymbolExpr).Symbol.String())
+
+	e, err = ParseExpr("[$x call]")
+	assert.NoError(t, err)
+	b, ok = e.(*expr.LambdaBlockExpr)
+	assert.True(t, ok)
+	assert.Equal(t, 0, len(b.Symbols))
+	assert.Equal(t, "$x", b.Body.(*expr.MessageExpr).Receiver.(*expr.RefExpr).Ref.String())
+	assert.Equal(t, "call", b.Body.(*expr.MessageExpr).Message.(*expr.SymbolExpr).Symbol.String())
+
+	e, err = ParseExpr("[$x call] call")
+	assert.NoError(t, err)
+	_, ok = e.(*expr.MessageExpr)
+	assert.True(t, ok)
+}
+
 func TestParseStmt(t *testing.T) {
 	s, err := ParseStmt(`$x = "$foo"`)
 	assert.NoError(t, err)
