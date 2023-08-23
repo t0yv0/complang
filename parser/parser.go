@@ -97,52 +97,39 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 	}
 }
 
-func parseLambdaBlockExpr(tokens []token) (expr.Expr, []token) {
-	tokens = tokens[1:] // skip [
-
-	k := -1
-	n := 0
-	for n = 0; n < len(tokens); n++ {
-		if tokens[n].t == byte('|') {
-			k = n
-		}
-		if tokens[n].t == byte(']') {
-			break
-		}
-	}
-	if n == len(tokens) {
-		return nil, tokens
-	}
-
-	if k != -1 {
-		body, rest := parseExpr(tokens[k+1 : n])
-		if len(rest) != 0 {
+func parseLambdaBlockParams(tokens []token) ([]value.Symbol, []token) {
+	var params []value.Symbol
+	for i := 0; i < len(tokens); i++ {
+		if s, isSymbol := tokens[i].t.(value.Symbol); isSymbol {
+			params = append(params, s)
+		} else if tokens[i].t == byte(']') {
 			return nil, tokens
+		} else if tokens[i].t == byte('|') {
+			return params, tokens[i+1:]
 		}
-
-		var symbols []value.Symbol
-		for _, t := range tokens[0:k] {
-			s, ok := t.t.(value.Symbol)
-			if !ok {
-				return nil, tokens
-			}
-			symbols = append(symbols, s)
-		}
-
-		return &expr.LambdaBlockExpr{
-			Symbols: symbols,
-			Body:    body,
-		}, tokens[n+1:]
 	}
+	return nil, tokens
+}
 
-	body, rest := parseExpr(tokens[0:n])
-	if len(rest) != 0 {
+func parseLambdaBlockExpr(tokens []token) (expr.Expr, []token) {
+	if len(tokens) == 0 {
 		return nil, tokens
 	}
-
+	if tokens[0].t != byte('[') {
+		return nil, tokens
+	}
+	symbols, rest1 := parseLambdaBlockParams(tokens[1:])
+	body, rest2 := parseExpr(rest1)
+	if len(rest2) == 0 {
+		return nil, tokens
+	}
+	if rest2[0].t != byte(']') {
+		return nil, tokens
+	}
 	return &expr.LambdaBlockExpr{
-		Body: body,
-	}, tokens[n+1:]
+		Symbols: symbols,
+		Body:    body,
+	}, rest2[1:]
 }
 
 func isRef(s value.Symbol) bool {
