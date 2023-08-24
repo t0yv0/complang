@@ -6,7 +6,7 @@ import (
 	"github.com/t0yv0/complang/value"
 )
 
-func EvalExpr(env map[value.Symbol]value.Value, expr Expr) value.Value {
+func EvalExpr(env value.Env, expr Expr) value.Value {
 	switch expr := expr.(type) {
 	case *NullExpr:
 		return &value.NullValue{}
@@ -17,7 +17,7 @@ func EvalExpr(env map[value.Symbol]value.Value, expr Expr) value.Value {
 	case *StringExpr:
 		return &value.StringValue{Value: expr.String}
 	case *RefExpr:
-		v, ok := env[expr.Ref]
+		v, ok := env.Lookup(expr.Ref)
 		if ok {
 			return v
 		}
@@ -27,55 +27,21 @@ func EvalExpr(env map[value.Symbol]value.Value, expr Expr) value.Value {
 		message := EvalExpr(env, expr.Message)
 		return receiver.Message(message)
 	case *LambdaBlockExpr:
-		return &value.CustomValue{ValueLike: &Closure{
-			params: expr.Symbols,
-			body:   expr.Body,
-			env:    env,
-		}}
+		body := expr.Body
+		closure := &value.Closure{
+			Env:    env,
+			Params: expr.Symbols,
+			Call: func(env value.Env) value.Value {
+				return EvalExpr(env, body)
+			},
+		}
+		return &value.CustomValue{ValueLike: closure}
 	default:
 		panic("EvalExpr is incomplete")
 	}
 }
 
-type Closure struct {
-	env    map[value.Symbol]value.Value
-	params []value.Symbol
-	body   Expr
-}
-
-var (
-	call = value.NewSymbol("call")
-)
-
-func (c *Closure) Message(arg value.Value) value.Value {
-	if len(c.params) == 0 {
-		if v, ok := arg.(*value.SymbolValue); ok && v.Value == call {
-			return EvalExpr(c.env, c.body)
-		}
-		return &value.ErrorValue{ErrorMessage: "expecting call message"}
-	}
-	env := map[value.Symbol]value.Value{}
-	for k, v := range c.env {
-		env[k] = v
-	}
-	env[c.params[0]] = arg
-	if len(c.params) == 1 {
-		return EvalExpr(env, c.body)
-	}
-	return &value.CustomValue{ValueLike: &Closure{
-		env:    env,
-		params: c.params[1:],
-		body:   c.body,
-	}}
-}
-
-func (c *Closure) CompleteSymbol(query value.Symbol) []value.Symbol { return nil }
-func (c *Closure) Run() value.Value                                 { return &value.CustomValue{ValueLike: c} }
-func (c *Closure) Show() string                                     { return "<closure>" }
-
-var _ value.ValueLike = (*Closure)(nil)
-
-func EvalStmt(env map[value.Symbol]value.Value, stmt Stmt) {
+func EvalStmt(env *value.MapEnv, stmt Stmt) {
 	switch stmt := stmt.(type) {
 	case *ExprStmt:
 		v := EvalExpr(env, stmt.Expr)
@@ -84,19 +50,24 @@ func EvalStmt(env map[value.Symbol]value.Value, stmt Stmt) {
 	case *AssignStmt:
 		v := EvalExpr(env, stmt.Expr)
 		v = v.Run() // run side-effects
-		env[stmt.Ref] = v
+		env.SymbolMap[stmt.Ref] = v
 	default:
 		panic("EvalStmt is incomplete")
 	}
 }
 
-func EvalQuery(env map[value.Symbol]value.Value, q Query) []value.Symbol {
+func EvalQuery(env value.Env, q Query) []value.Symbol {
 	switch q := q.(type) {
 	case *SymbolQuery:
 		v := EvalExpr(env, q.Expr)
 		return v.CompleteSymbol(q.Symbol)
 	case *RefQuery:
-		v := &value.MapValue{Value: env}
+		v := &value.MapValue{Value: map[value.Symbol]value.Value{}}
+		for _, s := range env.Symbols() {
+			if sv, ok := env.Lookup(s); ok {
+				v.Value[s] = sv
+			}
+		}
 		return v.CompleteSymbol(q.Ref)
 	default:
 		panic(fmt.Sprintf("EvalQuery is incomplete, got %#T", q))

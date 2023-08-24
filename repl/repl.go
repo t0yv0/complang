@@ -15,12 +15,12 @@ type ReadEvalPrintLoopOptions struct {
 
 func ReadEvalPrintLoop(cfg ReadEvalPrintLoopOptions) error {
 	return readlineREPL(cfg.HistoryFile, &complangInterpreter{
-		env: cfg.InitialEnvironment,
+		env: value.MapEnv{cfg.InitialEnvironment},
 	})
 }
 
 type complangInterpreter struct {
-	env map[value.Symbol]value.Value
+	env value.MapEnv
 }
 
 func (ci *complangInterpreter) ReadEvalPrint(command string) {
@@ -29,7 +29,7 @@ func (ci *complangInterpreter) ReadEvalPrint(command string) {
 		fmt.Printf("ERROR invalid syntax: %v\n", err)
 		return
 	}
-	expr.EvalStmt(ci.env, stmt)
+	expr.EvalStmt(&ci.env, stmt)
 }
 
 func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) (string, []string) {
@@ -40,7 +40,7 @@ func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) (string, 
 	if query == nil {
 		return "", nil
 	}
-	completions := expr.EvalQuery(ci.env, query)
+	completions := expr.EvalQuery(&ci.env, query)
 	result := []string{}
 	for _, c := range completions {
 		result = append(result, c.String())

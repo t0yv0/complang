@@ -31,6 +31,6 @@ func TestEvalQuery(t *testing.T) {
 			},
 		},
 	}
-	res := EvalQuery(env, sq)
+	res := EvalQuery(&value.MapEnv{env}, sq)
 	assert.Equal(t, []value.Symbol{foo1, foo2}, res)
 }

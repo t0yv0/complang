@@ -8,13 +8,13 @@ import (
 )
 
 func TestReadEvalComplete(t *testing.T) {
-	inter := &complangInterpreter{env: map[value.Symbol]value.Value{
+	inter := &complangInterpreter{env: value.MapEnv{map[value.Symbol]value.Value{
 		value.NewSymbol("$obj"): &value.MapValue{Value: map[value.Symbol]value.Value{
 			value.NewSymbol("fox"):  &value.StringValue{Value: "FOX"},
 			value.NewSymbol("fine"): &value.StringValue{Value: "FINE"},
 		}},
 		value.NewSymbol("$fun"): &value.BoolValue{Value: true},
-	}}
+	}}}
 
 	{
 		prefix, completions := inter.ReadEvalComplete("$obj f")
