@@ -37,6 +37,9 @@ func ParseQuery(code string) (expr.Query, error) {
 	if err != nil {
 		return nil, err
 	}
+	if strings.HasSuffix(code, " ") {
+		return parseEmptySymbolQuery(code, tokens)
+	}
 	e, rest := parseQuery(tokens)
 	if e == nil || len(rest) > 0 {
 		return nil, fmt.Errorf("could not parse expression in query")
@@ -204,4 +207,23 @@ func parseSymbolQuery(tokens []token) (expr.Query, []token) {
 		}
 	}
 	return nil, tokens
+}
+
+func parseEmptySymbolQuery(code string, tokens []token) (expr.Query, error) {
+	stmt, rest := parseStmt(tokens)
+	if stmt == nil || len(rest) > 0 {
+		return nil, fmt.Errorf("could not parse statement in query")
+	}
+	var e expr.Expr
+	switch stmt := stmt.(type) {
+	case *expr.ExprStmt:
+		e = stmt.Expr
+	case *expr.AssignStmt:
+		e = stmt.Expr
+	}
+	return &expr.SymbolQuery{
+		Expr:         e,
+		Symbol:       value.NewSymbol(""),
+		SymbolOffset: len(code),
+	}, nil
 }

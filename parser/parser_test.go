@@ -61,6 +61,18 @@ func TestParseQuery(t *testing.T) {
 			assert.Equal(t, "f", sq.Symbol.String())
 		}
 	})
+	t.Run("SymbolQuery/empty", func(t *testing.T) {
+		for _, code := range []string{"$obj ", "$v = $obj "} {
+			q, err := ParseQuery(code)
+			assert.NoError(t, err)
+			sq, ok := q.(*expr.SymbolQuery)
+			assert.True(t, ok)
+			re, ok := sq.Expr.(*expr.RefExpr)
+			assert.True(t, ok)
+			assert.Equal(t, "$obj", re.Ref.String())
+			assert.Equal(t, "", sq.Symbol.String())
+		}
+	})
 	t.Run("RefQuery", func(t *testing.T) {
 		{
 			q, err := ParseQuery("$f")
