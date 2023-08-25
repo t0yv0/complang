@@ -30,7 +30,7 @@ func tokenize(s string) ([]token, error) {
 			buf.Reset()
 			buf.WriteByte('$')
 			i++
-			for i < len(s) && alnum(s[i]) {
+			for i < len(s) && symchar(s[i]) {
 				buf.WriteByte(s[i])
 				i++
 			}
@@ -54,7 +54,7 @@ func tokenize(s string) ([]token, error) {
 				buf.Reset()
 				buf.WriteByte(s[i])
 				i++
-				for i < len(s) && alnum(s[i]) {
+				for i < len(s) && symchar(s[i]) {
 					buf.WriteByte(s[i])
 					i++
 				}
@@ -142,9 +142,9 @@ func symstarter(c byte) bool {
 	}
 }
 
-func alnum(c byte) bool {
+func symchar(c byte) bool {
 	switch c {
-	case '_', '-':
+	case '_', '-', ':':
 		return true
 	default:
 		switch {
