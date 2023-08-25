@@ -69,6 +69,10 @@ func TestTokenize(t *testing.T) {
 			tokens: []any{123},
 			err:    fmt.Errorf("unexpected '1'"),
 		},
+		{
+			s:      "foo:bar/baz",
+			tokens: []any{value.NewSymbol("foo:bar/baz")},
+		},
 	}
 
 	for _, tc := range testCases {

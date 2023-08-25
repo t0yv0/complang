@@ -168,7 +168,7 @@ token
     '|'
 
 symbol
-    [_a-zA-Z][-_a-zA-Z0-9:]*
+    [_a-zA-Z][-_a-zA-Z0-9:/]*
 
 ref
     [$] [-_a-zA-Z0-9]*
