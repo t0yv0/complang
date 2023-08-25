@@ -11,16 +11,23 @@ import (
 type ReadEvalPrintLoopOptions struct {
 	HistoryFile        string
 	InitialEnvironment map[value.Symbol]value.Value
+	MaxCompletions     int
 }
 
 func ReadEvalPrintLoop(cfg ReadEvalPrintLoopOptions) error {
+	maxCompletions := cfg.MaxCompletions
+	if maxCompletions == 0 {
+		maxCompletions = 16
+	}
 	return readlineREPL(cfg.HistoryFile, &complangInterpreter{
-		env: value.MapEnv{cfg.InitialEnvironment},
+		env:            value.MapEnv{cfg.InitialEnvironment},
+		maxCompletions: maxCompletions,
 	})
 }
 
 type complangInterpreter struct {
-	env value.MapEnv
+	env            value.MapEnv
+	maxCompletions int
 }
 
 func (ci *complangInterpreter) ReadEvalPrint(command string) {
@@ -42,7 +49,10 @@ func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) (string, 
 	}
 	completions := expr.EvalQuery(&ci.env, query)
 	result := []string{}
-	for _, c := range completions {
+	for i, c := range completions {
+		if i >= ci.maxCompletions {
+			break
+		}
 		result = append(result, c.String())
 	}
 	return partialCommand[0:query.Offset()], result
