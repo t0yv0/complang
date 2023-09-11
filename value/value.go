@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
+
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 var (
@@ -162,15 +163,16 @@ func (mv *MapValue) Message(arg Value) Value {
 }
 
 func (mv *MapValue) CompleteSymbol(query Symbol) []Symbol {
-	out := []Symbol{}
+	var targets []Symbol
+	var targetStrings []string
 	for sym := range mv.Value {
-		if strings.HasPrefix(sym.String(), query.String()) {
-			out = append(out, sym)
-		}
+		targets = append(targets, sym)
+		targetStrings = append(targetStrings, sym.String())
 	}
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].String() < out[j].String()
-	})
+	var out []Symbol
+	for _, r := range fuzzy.RankFindNormalizedFold(query.String(), targetStrings) {
+		out = append(out, targets[r.OriginalIndex])
+	}
 	return out
 }
 

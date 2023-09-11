@@ -3,14 +3,13 @@ package repl
 import (
 	"io"
 	"log"
-	"strings"
 
 	"github.com/chzyer/readline"
 )
 
 type interpreter interface {
 	ReadEvalPrint(command string)
-	ReadEvalComplete(partialCommand string) (string, []string)
+	ReadEvalComplete(partialCommand string) []readline.Candidate
 }
 
 func readlineREPL(historyFile string, inter interpreter) (finalError error) {
@@ -64,19 +63,16 @@ type completer struct {
 	inter interpreter
 }
 
-func (vc *completer) Do(line []rune, pos int) ([][]rune, int) {
+// This method is not in use, Complete is called instead.
+func (vc *completer) Do([]rune, int) ([][]rune, int) {
+	return nil, 0
+}
+
+func (vc *completer) Complete(line []rune, pos int) []readline.Candidate {
 	// Only complete at the end of lines for now.
 	if pos != len(line) {
-		return nil, len(line)
+		return nil
 	}
 	l := runesToStr(line)
-	prefix, completions := vc.inter.ReadEvalComplete(l)
-	lastToken := l[len(prefix):]
-	var out [][]rune
-	for _, x := range completions {
-		if strings.HasPrefix(x, lastToken) {
-			out = append(out, strToRunes(strings.TrimPrefix(x, lastToken)))
-		}
-	}
-	return out, len(lastToken)
+	return vc.inter.ReadEvalComplete(l)
 }

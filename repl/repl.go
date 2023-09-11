@@ -3,6 +3,7 @@ package repl
 import (
 	"fmt"
 
+	"github.com/chzyer/readline"
 	"github.com/t0yv0/complang/expr"
 	"github.com/t0yv0/complang/parser"
 	"github.com/t0yv0/complang/value"
@@ -39,21 +40,25 @@ func (ci *complangInterpreter) ReadEvalPrint(command string) {
 	expr.EvalStmt(&ci.env, stmt)
 }
 
-func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) (string, []string) {
+func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) []readline.Candidate {
 	query, err := parser.ParseQuery(partialCommand)
 	if err != nil {
-		return "", nil
+		return nil
 	}
 	if query == nil {
-		return "", nil
+		return nil
 	}
 	completions := expr.EvalQuery(&ci.env, query)
-	result := []string{}
+	result := []readline.Candidate{}
 	for i, c := range completions {
 		if i >= ci.maxCompletions {
 			break
 		}
-		result = append(result, c.String())
+		rc := readline.Candidate{
+			NewLine: []rune(partialCommand[0:query.Offset()] + c.String()),
+			Display: []rune(c.String()),
+		}
+		result = append(result, rc)
 	}
-	return partialCommand[0:query.Offset()], result
+	return result
 }
