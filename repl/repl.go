@@ -37,7 +37,9 @@ func (ci *complangInterpreter) ReadEvalPrint(command string) {
 		fmt.Printf("ERROR invalid syntax: %v\n", err)
 		return
 	}
-	expr.EvalStmt(&ci.env, stmt)
+	if stmt != nil {
+		expr.EvalStmt(&ci.env, stmt)
+	}
 }
 
 func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) []readline.Candidate {
