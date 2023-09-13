@@ -170,7 +170,11 @@ func (mv *MapValue) CompleteSymbol(query Symbol) []Symbol {
 		targetStrings = append(targetStrings, sym.String())
 	}
 	var out []Symbol
-	for _, r := range fuzzy.RankFindNormalizedFold(query.String(), targetStrings) {
+	ranks := fuzzy.RankFindNormalizedFold(query.String(), targetStrings)
+	sort.Slice(ranks, func(i, j int) bool {
+		return ranks[i].Distance < ranks[j].Distance
+	})
+	for _, r := range ranks {
 		out = append(out, targets[r.OriginalIndex])
 	}
 	return out
