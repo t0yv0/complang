@@ -24,6 +24,13 @@ func main() {
 				"bool":   true,
 				"slice":  []string{"a", "b", "c"},
 				"map":    map[string]string{"one": "1"},
+				"structure": struct {
+					X bool
+					Y string
+				}{
+					X: true,
+					Y: "ok",
+				},
 			}),
 		},
 	})

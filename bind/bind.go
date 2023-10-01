@@ -34,6 +34,16 @@ func Value(v any) value.Value {
 				m[value.NewSymbol(key.String())] = Value(vv.MapIndex(key))
 			}
 			return &value.MapValue{Value: m}
+		case vv.Kind() == reflect.Struct:
+			m := map[value.Symbol]value.Value{}
+			for i := 0; i < vv.NumField(); i++ {
+				if !vv.Type().Field(i).IsExported() {
+					continue
+				}
+				nn := value.NewSymbol(vv.Type().Field(i).Name)
+				m[nn] = Value(vv.Field(i))
+			}
+			return &value.MapValue{Value: m}
 		default:
 			return &value.ErrorValue{ErrorMessage: fmt.Sprintf(
 				"Cannot bind value of type #%T to complang yet: %#V", v, v)}
