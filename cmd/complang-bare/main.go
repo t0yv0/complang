@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/t0yv0/complang/bind"
@@ -24,10 +25,7 @@ func main() {
 				"bool":   true,
 				"slice":  []string{"a", "b", "c"},
 				"map":    map[string]string{"one": "1"},
-				"structure": struct {
-					X bool
-					Y string
-				}{
+				"structure": exampleStruct{
 					X: true,
 					Y: "ok",
 				},
@@ -37,4 +35,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+type exampleStruct struct {
+	X bool
+	Y string
+}
+
+func (s exampleStruct) String() string {
+	return fmt.Sprintf("exampleStruct{X:%v,Y:%q}", s.X, s.Y)
+}
+
+func (s exampleStruct) Print() {
+	fmt.Println(s.String())
 }

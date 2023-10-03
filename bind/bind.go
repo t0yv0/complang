@@ -43,7 +43,26 @@ func Value(v any) value.Value {
 				nn := value.NewSymbol(vv.Type().Field(i).Name)
 				m[nn] = Value(vv.Field(i))
 			}
+			for i := 0; i < vv.Type().NumMethod(); i++ {
+				me := vv.Type().Method(i)
+				if !me.IsExported() {
+					continue
+				}
+				mh := vv.MethodByName(me.Name)
+				m[value.NewSymbol(me.Name)] = &value.CustomValue{ValueLike: &value.Closure{
+					Call: func(value.Env) value.Value {
+						ret := mh.Call([]reflect.Value{})
+						if len(ret) == 1 {
+							return Value(ret[0])
+						} else {
+							return &value.NullValue{}
+						}
+					},
+				}}
+			}
+
 			return &value.MapValue{Value: m}
+
 		default:
 			return &value.ErrorValue{ErrorMessage: fmt.Sprintf(
 				"Cannot bind value of type #%T to complang yet: %#V", v, v)}
