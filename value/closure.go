@@ -1,5 +1,10 @@
 package value
 
+import (
+	"bytes"
+	"fmt"
+)
+
 var (
 	call = NewSymbol("call")
 )
@@ -14,18 +19,12 @@ var _ ValueLike = (*Closure)(nil)
 
 func (c *Closure) Message(arg Value) Value {
 	if len(c.Params) == 0 {
-		if v, ok := arg.(*SymbolValue); ok && v.Value == call {
-			return c.Call(c.Env)
-		}
-		return &ErrorValue{ErrorMessage: "expecting call message"}
+		return &ErrorValue{ErrorMessage: "unexpected message call"}
 	}
 	env := &extendedEnv{
 		Env:    c.Env,
 		symbol: c.Params[0],
 		value:  arg,
-	}
-	if len(c.Params) == 1 {
-		return c.Call(env)
 	}
 	return &CustomValue{ValueLike: &Closure{
 		Env:    env,
@@ -35,5 +34,25 @@ func (c *Closure) Message(arg Value) Value {
 }
 
 func (c *Closure) CompleteSymbol(query Symbol) []Symbol { return nil }
-func (c *Closure) Run() Value                           { return &CustomValue{ValueLike: c} }
-func (c *Closure) Show() string                         { return "<closure>" }
+
+func (c *Closure) Run() Value {
+	if len(c.Params) == 0 {
+		return c.Call(c.Env)
+	}
+	return &CustomValue{ValueLike: c}
+}
+
+func (c *Closure) Show() string {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "<Closure")
+	for i, p := range c.Params {
+		if i > 0 {
+			fmt.Fprintf(&buf, ",")
+		} else {
+			fmt.Fprintf(&buf, ":")
+		}
+		fmt.Fprintf(&buf, "%s", p.Show())
+	}
+	fmt.Fprintf(&buf, ">")
+	return buf.String()
+}
