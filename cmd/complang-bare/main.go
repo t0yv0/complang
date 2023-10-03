@@ -46,6 +46,14 @@ func (s exampleStruct) String() string {
 	return fmt.Sprintf("exampleStruct{X:%v,Y:%q}", s.X, s.Y)
 }
 
+func (s exampleStruct) WithArg(arg string) string {
+	return s.Y + arg
+}
+
+func (s exampleStruct) With2Args(arg1, arg2 string) []string {
+	return []string{s.Y, arg1, arg2}
+}
+
 func (s exampleStruct) Print() {
 	fmt.Println(s.String())
 }

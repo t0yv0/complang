@@ -48,19 +48,8 @@ func Value(v any) value.Value {
 				if !me.IsExported() {
 					continue
 				}
-				mh := vv.MethodByName(me.Name)
-				m[value.NewSymbol(me.Name)] = &value.CustomValue{ValueLike: &value.Closure{
-					Call: func(value.Env) value.Value {
-						ret := mh.Call([]reflect.Value{})
-						if len(ret) == 1 {
-							return Value(ret[0])
-						} else {
-							return &value.NullValue{}
-						}
-					},
-				}}
+				m[value.NewSymbol(me.Name)] = bindMethod(vv, me)
 			}
-
 			return &value.MapValue{Value: m}
 
 		default:
@@ -68,4 +57,45 @@ func Value(v any) value.Value {
 				"Cannot bind value of type #%T to complang yet: %#V", v, v)}
 		}
 	}
+}
+
+func FromValue(v value.Value) (any, error) {
+	switch v := v.(type) {
+	case *value.StringValue:
+		return v.Value, nil
+	default:
+		err := fmt.Errorf("Cannot bind complang value back to Go yet: %s", v.Show())
+		return Value(err), nil
+	}
+}
+
+func bindMethod(vv reflect.Value, me reflect.Method) value.Value {
+	mh := vv.MethodByName(me.Name)
+	params := []value.Symbol{}
+	for i := 1; i < me.Type.NumIn(); i++ {
+		params = append(params, value.NewSymbol(fmt.Sprintf("a%d", i)))
+	}
+	return &value.CustomValue{ValueLike: &value.Closure{
+		Params: params,
+		Call: func(env value.Env) value.Value {
+			args := []reflect.Value{}
+			for _, p := range params {
+				pv, ok := env.Lookup(p)
+				if !ok {
+					return Value(fmt.Errorf("Unbound %v", p))
+				}
+				x, err := FromValue(pv)
+				if err != nil {
+					return Value(err)
+				}
+				args = append(args, reflect.ValueOf(x))
+			}
+			ret := mh.Call(args)
+			if len(ret) == 1 {
+				return Value(ret[0])
+			} else {
+				return &value.NullValue{}
+			}
+		},
+	}}
 }
