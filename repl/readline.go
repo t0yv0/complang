@@ -1,6 +1,7 @@
 package repl
 
 import (
+	"context"
 	"io"
 	"log"
 
@@ -8,11 +9,15 @@ import (
 )
 
 type interpreter interface {
-	ReadEvalPrint(command string)
-	ReadEvalComplete(partialCommand string) []readline.Candidate
+	ReadEvalPrint(ctx context.Context, command string)
+	ReadEvalComplete(ctx context.Context, partialCommand string) []readline.Candidate
 }
 
-func readlineREPL(historyFile string, inter interpreter) (finalError error) {
+func readlineREPL(
+	ctx context.Context,
+	historyFile string,
+	inter interpreter,
+) (finalError error) {
 	cfg := &readline.Config{
 		Prompt:            "\033[31m»\033[0m ",
 		HistoryFile:       historyFile,
@@ -53,7 +58,7 @@ func readlineREPL(historyFile string, inter interpreter) (finalError error) {
 		} else if err == io.EOF {
 			break
 		}
-		inter.ReadEvalPrint(line)
+		inter.ReadEvalPrint(ctx, line)
 	}
 
 	return nil
@@ -68,11 +73,14 @@ func (vc *completer) Do([]rune, int) ([][]rune, int) {
 	return nil, 0
 }
 
-func (vc *completer) Complete(line []rune, pos int) []readline.Candidate {
+func (vc *completer) Complete(
+	ctx context.Context,
+	line []rune, pos int,
+) []readline.Candidate {
 	// Only complete at the end of lines for now.
 	if pos != len(line) {
 		return nil
 	}
-	l := runesToStr(line)
-	return vc.inter.ReadEvalComplete(l)
+	l := string(line)
+	return vc.inter.ReadEvalComplete(ctx, l)
 }

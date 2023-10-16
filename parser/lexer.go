@@ -3,8 +3,6 @@ package parser
 import (
 	"bytes"
 	"fmt"
-
-	"github.com/t0yv0/complang/value"
 )
 
 func tokenize(s string) ([]token, error) {
@@ -37,7 +35,7 @@ func tokenize(s string) ([]token, error) {
 			s := buf.String()
 			buf.Reset()
 			tok.length = i - tok.offset
-			tok.t = value.NewSymbol(s)
+			tok.t = symbol(s)
 			tokens = append(tokens, tok)
 		case '"':
 			tok := token{offset: i}
@@ -68,7 +66,7 @@ func tokenize(s string) ([]token, error) {
 				case "false":
 					tok.t = false
 				default:
-					tok.t = value.NewSymbol(s)
+					tok.t = symbol(s)
 				}
 				tok.length = i - tok.offset
 				tokens = append(tokens, tok)

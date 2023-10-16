@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/t0yv0/complang/value"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,11 +38,11 @@ func TestTokenize(t *testing.T) {
 		},
 		{
 			s:      "sym",
-			tokens: []any{value.NewSymbol("sym")},
+			tokens: []any{symbol("sym")},
 		},
 		{
 			s:      "$ref",
-			tokens: []any{value.NewSymbol("$ref")},
+			tokens: []any{symbol("$ref")},
 		},
 		{
 			s:      `"foo"`,
@@ -57,7 +55,7 @@ func TestTokenize(t *testing.T) {
 		{
 			s: `$ref = ("foo")`,
 			tokens: []any{
-				value.NewSymbol("$ref"),
+				symbol("$ref"),
 				byte('='),
 				byte('('),
 				"foo",
@@ -71,7 +69,7 @@ func TestTokenize(t *testing.T) {
 		},
 		{
 			s:      "foo:bar/baz",
-			tokens: []any{value.NewSymbol("foo:bar/baz")},
+			tokens: []any{symbol("foo:bar/baz")},
 		},
 	}
 
@@ -105,6 +103,6 @@ func TestOffsets(t *testing.T) {
 	source := `$obj fld "string\n" subf`
 	tokens, err := tokenize(source)
 	assert.NoError(t, err)
-	assert.Equal(t, value.NewSymbol("subf"), tokens[len(tokens)-1].t)
+	assert.Equal(t, symbol("subf"), tokens[len(tokens)-1].t)
 	assert.Equal(t, "subf", source[tokens[len(tokens)-1].offset:])
 }

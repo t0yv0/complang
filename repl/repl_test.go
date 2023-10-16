@@ -1,31 +1,44 @@
 package repl
 
 import (
+	"context"
 	"testing"
 
+	"github.com/chzyer/readline"
 	"github.com/stretchr/testify/assert"
-	"github.com/t0yv0/complang/value"
+	cl "github.com/t0yv0/complang"
 )
 
 func TestReadEvalComplete(t *testing.T) {
-	inter := &complangInterpreter{env: value.MapEnv{map[value.Symbol]value.Value{
-		value.NewSymbol("$obj"): &value.MapValue{Value: map[value.Symbol]value.Value{
-			value.NewSymbol("fox"):  &value.StringValue{Value: "FOX"},
-			value.NewSymbol("fine"): &value.StringValue{Value: "FINE"},
-		}},
-		value.NewSymbol("$fun"): &value.BoolValue{Value: true},
-	}}}
+	ctx := context.Background()
+	env := cl.NewMutableEnv()
+	env.Bind("$obj", cl.MapValue(map[string]cl.Value{
+		"fox":  cl.StringValue{Text: "FOX"},
+		"fine": cl.StringValue{Text: "FINE"},
+	}))
+	env.Bind("$fun", cl.BoolValue{Bool: true})
+	inter := &complangInterpreter{env: env}
 
 	{
-		prefix, completions := inter.ReadEvalComplete("$obj f")
-		assert.Equal(t, "$obj ", prefix)
-		assert.Contains(t, completions, "fox")
-		assert.Contains(t, completions, "fine")
+		completions := inter.ReadEvalComplete(ctx, "$obj f")
+		assert.Contains(t, completions, readline.Candidate{
+			Display: []rune("fox"),
+			NewLine: []rune("$obj fox"),
+		})
+		assert.Contains(t, completions, readline.Candidate{
+			Display: []rune("fine"),
+			NewLine: []rune("$obj fine"),
+		})
 	}
 
 	{
-		_, completions := inter.ReadEvalComplete("$obj $f")
-		//assert.Equal(t, "$obj ", prefix)
-		assert.Contains(t, completions, "$fun")
+		completions := inter.ReadEvalComplete(ctx, "$obj $f")
+		for i, c := range completions {
+			t.Logf("%d %q %q", i, string(c.Display), string(c.NewLine))
+		}
+		assert.Contains(t, completions, readline.Candidate{
+			Display: []rune("$fun"),
+			NewLine: []rune("$obj $fun"),
+		})
 	}
 }

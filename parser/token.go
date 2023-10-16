@@ -5,3 +5,5 @@ type token struct {
 	offset int
 	length int
 }
+
+type symbol string

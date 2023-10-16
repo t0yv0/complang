@@ -1,26 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/t0yv0/complang/bind"
+	cl "github.com/t0yv0/complang"
 	"github.com/t0yv0/complang/repl"
-	"github.com/t0yv0/complang/value"
 )
 
 func main() {
-	err := repl.ReadEvalPrintLoop(repl.ReadEvalPrintLoopOptions{
+	ctx := context.Background()
+	err := repl.ReadEvalPrintLoop(ctx, repl.ReadEvalPrintLoopOptions{
 		HistoryFile: "/tmp/complang-bare-readline.history",
-		InitialEnvironment: map[value.Symbol]value.Value{
-			value.NewSymbol("$digits"): &value.MapValue{
-				Value: map[value.Symbol]value.Value{
-					value.NewSymbol("one"):   &value.StringValue{Value: "1"},
-					value.NewSymbol("two"):   &value.StringValue{Value: "2"},
-					value.NewSymbol("three"): &value.StringValue{Value: "3"},
-				},
-			},
-			value.NewSymbol("$something"): bind.Value(map[string]interface{}{
+		InitialEnvironment: map[string]cl.Value{
+			"$digits": cl.MapValue(map[string]cl.Value{
+				"one":   cl.StringValue{Text: "1"},
+				"two":   cl.StringValue{Text: "2"},
+				"three": cl.StringValue{Text: "3"},
+			}),
+			"$something": cl.BindValue(map[string]interface{}{
 				"string": "stringValue",
 				"bool":   true,
 				"slice":  []string{"a", "b", "c"},

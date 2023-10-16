@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/t0yv0/complang/expr"
-	"github.com/t0yv0/complang/value"
 )
 
 func ParseExpr(code string) (expr.Expr, error) {
@@ -78,15 +77,15 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 		return parseLambdaBlockExpr(tokens)
 	}
 	switch t := tokens[0].t.(type) {
-	case value.Symbol:
+	case symbol:
 		if isRef(t) {
 			return &expr.RefExpr{
-				Ref:    t,
+				Ref:    string(t),
 				Offset: tokens[0].offset,
 			}, tokens[1:]
 		}
 		return &expr.SymbolExpr{
-			Symbol: t,
+			Symbol: string(t),
 			Offset: tokens[0].offset,
 		}, tokens[1:]
 	case string:
@@ -100,11 +99,11 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 	}
 }
 
-func parseLambdaBlockParams(tokens []token) ([]value.Symbol, []token) {
-	var params []value.Symbol
+func parseLambdaBlockParams(tokens []token) ([]string, []token) {
+	var params []string
 	for i := 0; i < len(tokens); i++ {
-		if s, isSymbol := tokens[i].t.(value.Symbol); isSymbol {
-			params = append(params, s)
+		if s, isSymbol := tokens[i].t.(symbol); isSymbol {
+			params = append(params, string(s))
 		} else if tokens[i].t == byte(']') {
 			return nil, tokens
 		} else if tokens[i].t == byte('|') {
@@ -135,20 +134,20 @@ func parseLambdaBlockExpr(tokens []token) (expr.Expr, []token) {
 	}, rest2[1:]
 }
 
-func isRef(s value.Symbol) bool {
-	return strings.HasPrefix(s.Show(), "$")
+func isRef(s symbol) bool {
+	return strings.HasPrefix(string(s), "$")
 }
 
 func parseStmt(tokens []token) (expr.Stmt, []token) {
 	if len(tokens) == 0 {
 		return nil, tokens
 	}
-	if s, ok := tokens[0].t.(value.Symbol); ok && isRef(s) {
+	if s, ok := tokens[0].t.(symbol); ok && isRef(s) {
 		if len(tokens) > 1 && tokens[1].t == byte('=') {
 			e, rest := parseExpr(tokens[2:])
 			if e != nil {
 				return &expr.AssignStmt{
-					Ref:  s,
+					Ref:  string(s),
 					Expr: e,
 				}, rest
 			}
@@ -223,7 +222,7 @@ func parseEmptySymbolQuery(code string, tokens []token) (expr.Query, error) {
 	}
 	return &expr.SymbolQuery{
 		Expr:         e,
-		Symbol:       value.NewSymbol(""),
+		Symbol:       "",
 		SymbolOffset: len(code),
 	}, nil
 }

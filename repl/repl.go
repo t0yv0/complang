@@ -3,46 +3,54 @@ package repl
 import (
 	"fmt"
 
+	"context"
 	"github.com/chzyer/readline"
+	cl "github.com/t0yv0/complang"
 	"github.com/t0yv0/complang/expr"
 	"github.com/t0yv0/complang/parser"
-	"github.com/t0yv0/complang/value"
 )
 
 type ReadEvalPrintLoopOptions struct {
 	HistoryFile        string
-	InitialEnvironment map[value.Symbol]value.Value
+	InitialEnvironment map[string]cl.Value
 	MaxCompletions     int
 }
 
-func ReadEvalPrintLoop(cfg ReadEvalPrintLoopOptions) error {
+func ReadEvalPrintLoop(ctx context.Context, cfg ReadEvalPrintLoopOptions) error {
 	maxCompletions := cfg.MaxCompletions
 	if maxCompletions == 0 {
 		maxCompletions = 16
 	}
-	return readlineREPL(cfg.HistoryFile, &complangInterpreter{
-		env:            value.MapEnv{cfg.InitialEnvironment},
+	env := cl.NewMutableEnv()
+	for k, v := range cfg.InitialEnvironment {
+		env.Bind(k, v)
+	}
+	return readlineREPL(ctx, cfg.HistoryFile, &complangInterpreter{
+		env:            env,
 		maxCompletions: maxCompletions,
 	})
 }
 
 type complangInterpreter struct {
-	env            value.MapEnv
+	env            cl.MutableEnv
 	maxCompletions int
 }
 
-func (ci *complangInterpreter) ReadEvalPrint(command string) {
+func (ci *complangInterpreter) ReadEvalPrint(ctx context.Context, command string) {
 	stmt, err := parser.ParseStmt(command)
 	if err != nil {
 		fmt.Printf("ERROR invalid syntax: %v\n", err)
 		return
 	}
 	if stmt != nil {
-		expr.EvalStmt(&ci.env, stmt)
+		expr.EvalStmt(ctx, ci.env, stmt)
 	}
 }
 
-func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) []readline.Candidate {
+func (ci *complangInterpreter) ReadEvalComplete(
+	ctx context.Context,
+	partialCommand string,
+) []readline.Candidate {
 	query, err := parser.ParseQuery(partialCommand)
 	if err != nil {
 		return nil
@@ -50,15 +58,15 @@ func (ci *complangInterpreter) ReadEvalComplete(partialCommand string) []readlin
 	if query == nil {
 		return nil
 	}
-	completions := expr.EvalQuery(&ci.env, query)
+
+	f := fuzzyComplete(ci.maxCompletions)
+	expr.EvalQuery(ctx, ci.env, query, f.complete)
+
 	result := []readline.Candidate{}
-	for i, c := range completions {
-		if i >= ci.maxCompletions {
-			break
-		}
+	for _, c := range f.matches(query.QueryText()) {
 		rc := readline.Candidate{
-			NewLine: []rune(partialCommand[0:query.Offset()] + c.String()),
-			Display: []rune(c.String()),
+			NewLine: []rune(partialCommand[0:query.Offset()] + c),
+			Display: []rune(c),
 		}
 		result = append(result, rc)
 	}
