@@ -167,6 +167,11 @@ func (x MapValue) Message(ctx context.Context, v Value) Value {
 		return StringValue{fmt.Sprintf("{len=%d}", len(x))}
 	case RunMessage:
 		return x
+	case StringValue:
+		if vv, ok := x[v.Text]; ok {
+			return vv
+		}
+		return Error{fmt.Sprintf("unknown key: %q", v.Text)}
 	case CompleteRequest:
 		for k := range x {
 			if !v.Receiver(v.Query, k) {
