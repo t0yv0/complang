@@ -190,22 +190,6 @@ type Closure struct {
 	Call   func(context.Context, Env) Value
 }
 
-// func (c *Closure) Message(arg Value) Value {
-// 	if len(c.Params) == 0 {
-// 		return &ErrorValue{ErrorMessage: "unexpected message call"}
-// 	}
-// 	env := &extendedEnv{
-// 		Env:    c.Env,
-// 		symbol: c.Params[0],
-// 		value:  arg,
-// 	}
-// 	return &CustomValue{ValueLike: &Closure{
-// 		Env:    env,
-// 		Params: c.Params[1:],
-// 		Call:   c.Call,
-// 	}}
-// }
-
 func (c Closure) Message(ctx context.Context, msg Value) Value {
 	switch msg := msg.(type) {
 	case ShowMessage:
