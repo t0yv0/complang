@@ -26,12 +26,14 @@ func ReadEvalPrintLoop(ctx context.Context, cfg ReadEvalPrintLoopOptions) error 
 		env.Bind(k, v)
 	}
 	return readlineREPL(ctx, cfg.HistoryFile, &complangInterpreter{
+		ctx:            ctx,
 		env:            env,
 		maxCompletions: maxCompletions,
 	})
 }
 
 type complangInterpreter struct {
+	ctx            context.Context
 	env            cl.MutableEnv
 	maxCompletions int
 }
@@ -48,7 +50,6 @@ func (ci *complangInterpreter) ReadEvalPrint(ctx context.Context, command string
 }
 
 func (ci *complangInterpreter) ReadEvalComplete(
-	ctx context.Context,
 	partialCommand string,
 ) []readline.Candidate {
 	query, err := parser.ParseQuery(partialCommand)
@@ -60,7 +61,7 @@ func (ci *complangInterpreter) ReadEvalComplete(
 	}
 
 	f := fuzzyComplete(ci.maxCompletions)
-	expr.EvalQuery(ctx, ci.env, query, f.complete)
+	expr.EvalQuery(ci.ctx, ci.env, query, f.complete)
 
 	result := []readline.Candidate{}
 	for _, c := range f.matches(query.QueryText()) {

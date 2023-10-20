@@ -10,7 +10,7 @@ import (
 
 type interpreter interface {
 	ReadEvalPrint(ctx context.Context, command string)
-	ReadEvalComplete(ctx context.Context, partialCommand string) []readline.Candidate
+	ReadEvalComplete(partialCommand string) []readline.Candidate
 }
 
 func readlineREPL(
@@ -68,13 +68,14 @@ type completer struct {
 	inter interpreter
 }
 
+var _ readline.AutoCompleterWithCandidates = (*completer)(nil)
+
 // This method is not in use, Complete is called instead.
 func (vc *completer) Do([]rune, int) ([][]rune, int) {
-	return nil, 0
+	panic("completer.Do is not supposed to be called")
 }
 
 func (vc *completer) Complete(
-	ctx context.Context,
 	line []rune, pos int,
 ) []readline.Candidate {
 	// Only complete at the end of lines for now.
@@ -82,5 +83,5 @@ func (vc *completer) Complete(
 		return nil
 	}
 	l := string(line)
-	return vc.inter.ReadEvalComplete(ctx, l)
+	return vc.inter.ReadEvalComplete(l)
 }
