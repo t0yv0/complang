@@ -53,15 +53,15 @@ func BindValue(v any) Value {
 
 		default:
 			return Error{fmt.Sprintf(
-				"Cannot bind value of type #%T to complang yet: %#V", v, v)}
+				"Cannot bind value of type %T to complang yet: %#V", v, v)}
 		}
 	}
 }
 
 func UnbindValue(ctx context.Context, v Value) (any, error) {
 	switch v := v.(type) {
-	case *StringValue:
-		return v, nil
+	case StringValue:
+		return v.Text, nil
 	default:
 		return nil, fmt.Errorf("Cannot bind complang value back to Go yet: %s",
 			Show(ctx, v))
