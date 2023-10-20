@@ -13,24 +13,28 @@ type Value interface {
 // :show -- objects respond to :show with a string value to customize how they will be displayed.
 type ShowMessage struct{}
 
-func (ShowMessage) Message(ctx context.Context, v Value) Value {
+func (sm ShowMessage) Message(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
 		return StringValue{":show"}
+	case RunMessage:
+		return sm
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, sm, v)
 	}
 }
 
 // :run -- objects are only allowed to do side-effects when responding to the :run message.
 type RunMessage struct{}
 
-func (RunMessage) Message(ctx context.Context, v Value) Value {
+func (rm RunMessage) Message(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
 		return StringValue{":run"}
+	case RunMessage:
+		return rm
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, rm, v)
 	}
 }
 
@@ -40,12 +44,14 @@ type CompleteRequest struct {
 	Receiver func(query string, match string) bool
 }
 
-func (CompleteRequest) Message(ctx context.Context, v Value) Value {
+func (cr CompleteRequest) Message(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
 		return StringValue{":complete"}
+	case RunMessage:
+		return cr
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, cr, v)
 	}
 }
 
@@ -57,14 +63,18 @@ func (x Error) Message(_ context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
 		return StringValue{fmt.Sprintf("ERROR: %s", x.ErrorMessage)}
+	case RunMessage:
+		return x
 	default:
 		// Errors are self-evaluating to float out of expressions.
 		return x
 	}
 }
 
-func DoNotUnderstandError(ctx context.Context, message Value) Value {
-	return &Error{fmt.Sprintf("object does not understand %s", Show(ctx, message))}
+func DoNotUnderstandError(ctx context.Context, obj Value, message Value) Value {
+	return &Error{fmt.Sprintf("object %s does not understand %s",
+		Show(ctx, obj),
+		Show(ctx, message))}
 }
 
 type StringValue struct {
@@ -75,8 +85,10 @@ func (x StringValue) Message(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
 		return StringValue{fmt.Sprintf("%q", x.Text)}
+	case RunMessage:
+		return x
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, x, v)
 	}
 }
 
@@ -103,8 +115,10 @@ func (x NullValue) Message(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
 		return StringValue{"null"}
+	case RunMessage:
+		return x
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, x, v)
 	}
 }
 
@@ -119,8 +133,10 @@ func (x BoolValue) Message(ctx context.Context, v Value) Value {
 			return StringValue{"true"}
 		}
 		return StringValue{"false"}
+	case RunMessage:
+		return x
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, x, v)
 	}
 }
 
@@ -133,8 +149,10 @@ func (x SliceValue) Message(ctx context.Context, v Value) Value {
 			return StringValue{"[]"}
 		}
 		return StringValue{fmt.Sprintf("[len=%d]", len(x))}
+	case RunMessage:
+		return x
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, x, v)
 	}
 }
 
@@ -147,6 +165,8 @@ func (x MapValue) Message(ctx context.Context, v Value) Value {
 			return StringValue{"{}"}
 		}
 		return StringValue{fmt.Sprintf("{len=%d}", len(x))}
+	case RunMessage:
+		return x
 	case CompleteRequest:
 		for k := range x {
 			if !v.Receiver(v.Query, k) {
@@ -155,7 +175,7 @@ func (x MapValue) Message(ctx context.Context, v Value) Value {
 		}
 		return NullValue{}
 	default:
-		return DoNotUnderstandError(ctx, v)
+		return DoNotUnderstandError(ctx, x, v)
 	}
 }
 
@@ -191,7 +211,7 @@ func (c Closure) Message(ctx context.Context, msg Value) Value {
 		return msg
 	default:
 		if len(c.Params) == 0 {
-			return DoNotUnderstandError(ctx, msg)
+			return DoNotUnderstandError(ctx, c, msg)
 		}
 		return Closure{
 			Env: &extendedEnv{
