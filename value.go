@@ -72,9 +72,21 @@ func (x Error) Message(_ context.Context, v Value) Value {
 }
 
 func DoNotUnderstandError(ctx context.Context, obj Value, message Value) Value {
-	return &Error{fmt.Sprintf("object %s does not understand %s",
-		Show(ctx, obj),
-		Show(ctx, message))}
+	return &doesNotUnderstandError{obj: obj, message: message}
+}
+
+type doesNotUnderstandError struct {
+	obj     Value
+	message Value
+}
+
+var _ Value = (*doesNotUnderstandError)(nil)
+
+func (dne *doesNotUnderstandError) Message(ctx context.Context, msg Value) Value {
+	e := &Error{fmt.Sprintf("object %s does not understand %s",
+		Show(ctx, dne.obj),
+		Show(ctx, dne.message))}
+	return e.Message(ctx, msg)
 }
 
 type StringValue struct {
@@ -171,7 +183,7 @@ func (x MapValue) Message(ctx context.Context, v Value) Value {
 		if vv, ok := x[v.Text]; ok {
 			return vv
 		}
-		return Error{fmt.Sprintf("unknown key: %q", v.Text)}
+		return DoNotUnderstandError(ctx, x, v)
 	case CompleteRequest:
 		for k := range x {
 			if !v.Receiver(v.Query, k) {
@@ -249,4 +261,31 @@ func (c Closure) show() string {
 	}
 	fmt.Fprintf(&buf, ">")
 	return buf.String()
+}
+
+func OverloadedValue(primaryReceiver, fallbackReceiver Value) Value {
+	return &overloadedValue{primaryReceiver, fallbackReceiver}
+}
+
+type overloadedValue struct {
+	primary  Value
+	fallback Value
+}
+
+var _ Value = (*overloadedValue)(nil)
+
+func (ov *overloadedValue) Message(ctx context.Context, msg Value) Value {
+	switch msg := msg.(type) {
+	case CompleteRequest:
+		ov.primary.Message(ctx, msg)
+		ov.fallback.Message(ctx, msg)
+		return NullValue{}
+	}
+	resp := ov.primary.Message(ctx, msg)
+	switch resp.(type) {
+	case *doesNotUnderstandError:
+		return ov.fallback.Message(ctx, msg)
+	default:
+		return resp
+	}
 }
