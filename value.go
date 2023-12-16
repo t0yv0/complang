@@ -185,9 +185,11 @@ func (x MapValue) Message(ctx context.Context, v Value) Value {
 }
 
 type Closure struct {
-	Env    Env
-	Params []string
-	Call   func(context.Context, Env) Value
+	Env     Env
+	Params  []string
+	Call    func(context.Context, Env) Value
+	PostRun []Value
+	IsPure  bool
 }
 
 func (c Closure) Message(ctx context.Context, msg Value) Value {
@@ -199,24 +201,37 @@ func (c Closure) Message(ctx context.Context, msg Value) Value {
 	case Error:
 		return msg
 	default:
-		if len(c.Params) == 0 {
-			return DoNotUnderstandError(ctx, c, msg)
-		}
-		return Closure{
-			Env: &extendedEnv{
-				Env:    c.Env,
-				symbol: c.Params[0],
-				value:  msg,
-			},
-			Params: c.Params[1:],
-			Call:   c.Call,
+		switch {
+		case len(c.Params) == 0 && c.IsPure:
+			return c.run(ctx).Message(ctx, msg)
+		case len(c.Params) == 0 && !c.IsPure:
+			return Closure{
+				Env:     c.Env,
+				Call:    c.Call,
+				PostRun: append(c.PostRun, msg),
+			}
+
+		default:
+			return Closure{
+				Env: &extendedEnv{
+					Env:    c.Env,
+					symbol: c.Params[0],
+					value:  msg,
+				},
+				Params: c.Params[1:],
+				Call:   c.Call,
+			}
 		}
 	}
 }
 
 func (c Closure) run(ctx context.Context) Value {
 	if len(c.Params) == 0 {
-		return c.Call(ctx, c.Env)
+		v := c.Call(ctx, c.Env)
+		for _, msg := range c.PostRun {
+			v = v.Message(ctx, msg)
+		}
+		return Run(ctx, v)
 	}
 	return c
 }

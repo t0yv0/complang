@@ -33,6 +33,16 @@ func BindValue(v any) Value {
 				m[key.String()] = BindValue(vv.MapIndex(key))
 			}
 			return MapValue(m)
+		case vv.Kind() == reflect.Pointer && vv.Elem().Kind() == reflect.Struct:
+			m := map[string]Value{}
+			for i := 0; i < vv.Type().NumMethod(); i++ {
+				me := vv.Type().Method(i)
+				if !me.IsExported() {
+					continue
+				}
+				m[me.Name] = bindMethod(vv, me)
+			}
+			return MapValue(m)
 		case vv.Kind() == reflect.Struct:
 			m := map[string]Value{}
 			for i := 0; i < vv.NumField(); i++ {
@@ -50,7 +60,6 @@ func BindValue(v any) Value {
 				m[me.Name] = bindMethod(vv, me)
 			}
 			return MapValue(m)
-
 		default:
 			return Error{fmt.Sprintf(
 				"Cannot bind value of type %T to complang yet: %#V", v, v)}
@@ -97,5 +106,6 @@ func bindMethod(vv reflect.Value, me reflect.Method) Value {
 	return Closure{
 		Params: params,
 		Call:   c,
+		IsPure: me.Type.NumIn() == 1,
 	}
 }
