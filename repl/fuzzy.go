@@ -28,6 +28,9 @@ func fuzzyComplete(maxCompletions int) fuzzyCompleter {
 		for _, r := range ranks {
 			out = append(out, targets[r.OriginalIndex])
 		}
+		if len(out) > maxCompletions {
+			return out[0:maxCompletions]
+		}
 		return out
 	}
 
