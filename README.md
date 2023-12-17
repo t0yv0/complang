@@ -1,10 +1,15 @@
 # complang
 
-A toy scripting language designed for:
+What if Go was interactive? Suppose you work in a Go-dominated domain and you have some data and
+objects to explore interactively. If only you could drop them in a scripting REPL... Now if this
+really describes you and you are looking for a mature solution, you may be interested in
+[go-pry](https://github.com/d4l3k/go-pry). Complang is a toy-level exploration in this space.
+
+Complang is a toy scripting language designed for:
 
 - interactive shell-like use
 - context-aware code completion
-- being extensible in Go
+- being extensible in Go by binding Go values to it
 
 ## Example
 
