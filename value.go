@@ -38,7 +38,7 @@ func (rm RunMessage) Message(ctx context.Context, v Value) Value {
 	}
 }
 
-// :comlete -- objects respond to :complete to customize code completion.
+// :complete -- objects respond to :complete to customize code completion.
 type CompleteRequest struct {
 	Query    string
 	Receiver func(query string, match string) bool

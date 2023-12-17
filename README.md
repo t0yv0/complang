@@ -100,20 +100,25 @@ simpleValue
     symbol
 ```
 
-Custom values can be implemented in Go to overide key interactions with the interpreter:
+Custom values can be implemented in Go to override key interactions with the interpreter:
 
 ```go
-type CustomValue interface {
-	Message(arg Value) Value
-	CompleteSymbol(query Symbol) []Symbol
-    Run() Value
-	Show() string
+type Value interface {
+	Message(context.Context, Value) Value
 }
 ```
 
-Such values can have custom completion via `CompleteSymbol`.
+The are several special messages that encode interactions with the interpreter.
 
-Note that `Message` should not have side-effects. Instead, side-effects should be evaluated as part of `Run`.
+- ShowMessage asks the object to produce a StringValue to display itself in the REPL
+
+- RunMessage asks the object to run any deferred side-effects and return the final value
+
+- CompleteRequest queries which messages the object supports responding to
+
+Note that `Message` evaluation should not have side-effects except when responding to the
+RunMessage. This helps the REPL perform side-effect free dynamic completion while avoiding
+side-effects until you press enter.
 
 ## Syntax
 
