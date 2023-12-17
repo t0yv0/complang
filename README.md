@@ -15,10 +15,15 @@ go build ./cmd/complang-bare/
 ./complang-bare
 
 » $digits
-{one: "1", three: "3", two: "2"}
+one:
+    text: "1"
+three:
+    text: "3"
+two:
+    text: "2"
 
 » $digits t<TAB>
-three two
+two three
 
 » $digits three
 "3"
@@ -27,14 +32,11 @@ three two
 » $digits $x
 "3"
 
-» [$digits]
-<closure>
+» [$x | $digits $x]
+<Closure:$x>
 
-» [$digits] call
-{one: "1", three: "3", two: "2"}
-
-» [$digits] call three
-"3"
+» [$x | $digits $x] one
+"1"
 
 » [$x $y | $y $x] three $digits
 "3"
