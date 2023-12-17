@@ -96,7 +96,7 @@ type StringValue struct {
 func (x StringValue) Message(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case ShowMessage:
-		return StringValue{fmt.Sprintf("%q", x.Text)}
+		return StringValue{pretty(x.Text, -1, -1)}
 	case RunMessage:
 		return x
 	default:
@@ -157,10 +157,7 @@ type SliceValue []Value
 func (x SliceValue) Message(ctx context.Context, v Value) Value {
 	switch v := v.(type) {
 	case ShowMessage:
-		if len(x) == 0 {
-			return StringValue{"[]"}
-		}
-		return StringValue{fmt.Sprintf("[len=%d]", len(x))}
+		return StringValue{pretty(x, 32, 128)}
 	case RunMessage:
 		return x
 	default:
@@ -173,10 +170,7 @@ type MapValue map[string]Value
 func (x MapValue) Message(ctx context.Context, v Value) Value {
 	switch v := v.(type) {
 	case ShowMessage:
-		if len(x) == 0 {
-			return StringValue{"{}"}
-		}
-		return StringValue{fmt.Sprintf("{len=%d}", len(x))}
+		return StringValue{pretty(x, 32, 128)}
 	case RunMessage:
 		return x
 	case StringValue:
