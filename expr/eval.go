@@ -15,6 +15,8 @@ func EvalExpr(ctx context.Context, env cl.Env, expr Expr) cl.Value {
 		return cl.BoolValue{Bool: expr.Bool}
 	case *StringExpr:
 		return cl.StringValue{Text: expr.String}
+	case *NumExpr:
+		return cl.NumValue{Num: expr.Number}
 	case *SymbolExpr:
 		return cl.StringValue{Text: expr.Symbol}
 	case *RefExpr:

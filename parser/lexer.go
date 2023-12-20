@@ -46,6 +46,15 @@ func tokenize(s string) ([]token, error) {
 			tok.t = s
 			tok.length = i - tok.offset
 			tokens = append(tokens, tok)
+		case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			tok := token{offset: i}
+			n, err := lexNumber(s, &i)
+			if err != nil {
+				return nil, err
+			}
+			tok.t = n
+			tok.length = i - tok.offset
+			tokens = append(tokens, tok)
 		default:
 			if symstarter(s[i]) {
 				tok := token{offset: i}
@@ -75,7 +84,25 @@ func tokenize(s string) ([]token, error) {
 			}
 		}
 	}
-	return tokens, nil
+}
+
+func lexNumber(input string, pos *int) (int, error) {
+	s := 1
+	n := 0
+	for *pos < len(input) {
+		switch input[*pos] {
+		case '-':
+			s = -1
+			*pos = *pos + 1
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			d := int(input[*pos]) - int('0')
+			n = 10*n + d
+			*pos = *pos + 1
+		default:
+			return s * n, nil
+		}
+	}
+	return s * n, nil
 }
 
 func lexString(buf *bytes.Buffer, input string, pos *int) (string, error) {

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/t0yv0/complang/expr"
@@ -90,6 +91,8 @@ func parseSimpleExpr(tokens []token) (expr.Expr, []token) {
 		}, tokens[1:]
 	case string:
 		return &expr.StringExpr{String: t}, tokens[1:]
+	case int:
+		return &expr.NumExpr{Number: big.NewFloat(float64(t))}, tokens[1:]
 	case bool:
 		return &expr.BoolExpr{Bool: t}, tokens[1:]
 	case nil:

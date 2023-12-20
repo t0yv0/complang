@@ -1,5 +1,7 @@
 package expr
 
+import "math/big"
+
 type Expr interface {
 	exprMarker()
 }
@@ -49,6 +51,13 @@ type StringExpr struct {
 }
 
 var _ Expr = (*StringExpr)(nil)
+
+type NumExpr struct {
+	exprMarkerImpl
+	Number *big.Float
+}
+
+var _ Expr = (*NumExpr)(nil)
 
 type LambdaBlockExpr struct {
 	exprMarkerImpl

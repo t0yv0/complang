@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/big"
 )
 
 type Value interface {
@@ -104,6 +105,21 @@ func (x StringValue) Message(ctx context.Context, v Value) Value {
 	}
 }
 
+type NumValue struct {
+	Num *big.Float
+}
+
+func (x NumValue) Message(ctx context.Context, v Value) Value {
+	switch v.(type) {
+	case ShowMessage:
+		return StringValue{pretty(x.Num.String(), -1, -1)}
+	case RunMessage:
+		return x
+	default:
+		return DoNotUnderstandError(ctx, x, v)
+	}
+}
+
 func Show(ctx context.Context, v Value) string {
 	switch x := v.Message(ctx, ShowMessage{}).(type) {
 	case StringValue:
@@ -158,6 +174,16 @@ func (x SliceValue) Message(ctx context.Context, v Value) Value {
 	switch v := v.(type) {
 	case ShowMessage:
 		return StringValue{pretty(x, 32, 128)}
+	case NumValue:
+		if v.Num.IsInt() {
+			i, _ := v.Num.Int64()
+			j := int(i)
+			if j < 0 || j >= len(x) {
+				return Error{fmt.Sprintf("Index out of range: %d", j)}
+			}
+			return x[int(i)]
+		}
+		return DoNotUnderstandError(ctx, x, v)
 	case RunMessage:
 		return x
 	default:
