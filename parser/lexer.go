@@ -169,7 +169,7 @@ func symstarter(c byte) bool {
 
 func symchar(c byte) bool {
 	switch c {
-	case '_', '-', ':', '/':
+	case '_', '-', ':', '/', '.':
 		return true
 	default:
 		switch {
