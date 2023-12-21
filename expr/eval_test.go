@@ -2,11 +2,11 @@ package expr
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	cl "github.com/t0yv0/complang"
-	"sort"
 )
 
 func TestEvalExpr(t *testing.T) {
