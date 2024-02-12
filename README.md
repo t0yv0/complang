@@ -9,12 +9,14 @@ space.
 Complang is a toy scripting language designed for:
 
 - interactive shell-like use
-- context-aware code completion
-- being extensible in Go by binding Go values to it
+- context-aware tab completion using [liner](github.com/peterh/liner)
+- context-aware [fzf](https://github.com/junegunn/fzf)-like selection using
+  [go-fuzzyfinder](github.com/ktr0731/go-fuzzyfinder)
+- being extensible in Go by binding Go values
 
-Complang's superpower is completion. The entire language is designed for TAB-completing deeply
-nested object hierarchies, that is completion is intertwined with evaluating pure code and is driven
-by the dynamic values of the objects rather than static types alone.
+Complang's superpower is completion and selection. The entire language is designed for
+TAB-completing deeply nested object hierarchies, that is completion is intertwined with evaluating
+pure code and is driven by the dynamic values of the objects rather than static types alone.
 
 ## Example
 
@@ -24,7 +26,8 @@ See [complang-bare](./cmd/complang-bare/main.go) for an example Go-extended comp
 go build ./cmd/complang-bare/
 ./complang-bare
 
-» $digits
+> $dig<TAB>
+> $digits<ENTER>
 one:
     text: "1"
 three:
@@ -32,23 +35,28 @@ three:
 two:
     text: "2"
 
-» $digits t<TAB>
+> $digits t<TAB><TAB>
 two three
 
-» $digits three
+> $digits three
 "3"
 
-» $x = three
-» $digits $x
+> $digits **<ENTER>
+# launches fzf-like activity to make a selection
+> $digits two
+"2"
+
+> $x = three
+> $digits $x
 "3"
 
-» [$x | $digits $x]
+> [$x | $digits $x]
 <Closure:$x>
 
-» [$x | $digits $x] one
+> [$x | $digits $x] one
 "1"
 
-» [$x $y | $y $x] three $digits
+> [$x $y | $y $x] three $digits
 "3"
 ```
 
