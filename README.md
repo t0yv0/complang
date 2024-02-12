@@ -64,12 +64,12 @@ two three
 
 Spaces denote object message send (inspired by Smalltalk), for example the following is bit like `foo.subfield()` in JS:
 
-    » $foo subfield
+    > $foo subfield
 
 The interesting bit around which complang is designed is context-aware completion. Completion is activated when pressing
 a TAB at the end of an incomplete line:
 
-    » $foo subfield bar<<TAB>>
+    > $foo subfield bar<<TAB>>
 
 The interpreter will parse the line as a `query`, and evaluate the `expr` part (`$foo subfield` above) to an object
 value `v`, then dispatch the `symbol` part (`bar` above) to the value `v` to find completions specific to the object.
@@ -77,26 +77,26 @@ value `v`, then dispatch the `symbol` part (`bar` above) to the value `v` to fin
 Since completions are often repeated, evaluation of expressions must be free of side-effects. Instead, expressions may
 evaluate to descriptions of side-effects to be performed by the interpreter when submitted (think IO Monad in Haskell):
 
-    » $foo subfield barbell<<ENTER>>
+    > $foo subfield barbell<<ENTER>>
 
 If `$foo subfield barbell` evaluates to the moral equivalent of `print("barbell")` effect, this will give:
 
-    » $foo subfield barbell<<ENTER>>
+    > $foo subfield barbell<<ENTER>>
     barbell
 
 To make it ergonomic to work in shell-like contexts symbols are self-evaluating:
 
-    » sym
+    > sym
     sym
 
 To distinguish bound symbols the syntax requires sigils:
 
-    » $foo
+    > $foo
     fooValue
 
 The binding form is as follows, and it simply modifies the global environment `Map[Symbol,Value]`:
 
-    » $foo = fooValue
+    > $foo = fooValue
 
 ### Values
 
