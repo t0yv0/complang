@@ -9,9 +9,9 @@ space.
 Complang is a toy scripting language designed for:
 
 - interactive shell-like use
-- context-aware tab completion using [liner](github.com/peterh/liner)
+- context-aware tab completion using [liner](https://github.com/peterh/liner)
 - context-aware [fzf](https://github.com/junegunn/fzf)-like selection using
-  [go-fuzzyfinder](github.com/ktr0731/go-fuzzyfinder)
+  [go-fuzzyfinder](https://github.com/ktr0731/go-fuzzyfinder)
 - being extensible in Go by binding Go values
 
 Complang's superpower is completion and selection. The entire language is designed for
