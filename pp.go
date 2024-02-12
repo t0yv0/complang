@@ -9,15 +9,28 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type X struct {
+	X string `yaml:"x,flow"`
+}
+
+func preparePretty(value any) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	default:
+		var buf bytes.Buffer
+		err := encodeYaml(value, &buf)
+		if err != nil {
+			buf.Reset()
+			fmt.Fprintf(&buf, "%#v", value)
+		}
+		return buf.String()
+	}
+}
+
 func pretty(value any, maxHeight, maxWidth int) string {
 	value = unpack(value)
-	var buf bytes.Buffer
-	err := encodeYaml(value, &buf)
-	if err != nil {
-		buf.Reset()
-		fmt.Fprintf(&buf, "%#v", value)
-	}
-	s := buf.String()
+	s := preparePretty(value)
 	parts := strings.Split(s, "\n")
 	for i := 0; i < len(parts); i++ {
 		if maxWidth >= 0 && len(parts[i]) > maxWidth {
